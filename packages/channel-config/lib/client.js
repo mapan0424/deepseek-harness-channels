@@ -36,6 +36,7 @@ window.__ModuleLoader__.load({
         error: "读取失败",
         statusOnline: "已连接运行",
         statusInactive: "未接入",
+        statusAuthorization: "需要授权",
         sessionsCount: "个活跃会话",
         btnConfigure: "配置参数",
         btnQuickAdd: "+ 快速接入",
@@ -76,6 +77,10 @@ window.__ModuleLoader__.load({
         summaryModeLocal: "本地原生直连 (chat.db)",
         summaryModePhoton: "Photon 远程中继",
         summaryModeRelay: "Claw Relay 代理",
+        imessageAuthTitle: "iMessage 需要 macOS 授权",
+        imessageAuthDatabaseDenied: "未获得 chat.db 读取权限",
+        imessageAuthDatabaseReady: "chat.db 已可读取，仍需允许自动化控制“信息”应用",
+        imessageAuthGuide: "请打开“系统设置 → 隐私与安全性”，为 DeepSeek Harness 开启“完全磁盘访问”和“自动化 → 信息”，然后重启应用。",
       },
       en: {
         nav: "Channels",
@@ -90,6 +95,7 @@ window.__ModuleLoader__.load({
         error: "Failed to read",
         statusOnline: "Connected & Online",
         statusInactive: "Not Connected",
+        statusAuthorization: "Authorization Required",
         sessionsCount: " active sessions",
         btnConfigure: "Configure",
         btnQuickAdd: "+ Connect",
@@ -130,6 +136,10 @@ window.__ModuleLoader__.load({
         summaryModeLocal: "Local Native (chat.db)",
         summaryModePhoton: "Photon Remote Relay",
         summaryModeRelay: "Claw Relay Proxy",
+        imessageAuthTitle: "iMessage requires macOS authorization",
+        imessageAuthDatabaseDenied: "chat.db read access is not granted",
+        imessageAuthDatabaseReady: "chat.db is readable; automation access to Messages is still required",
+        imessageAuthGuide: "Open System Settings → Privacy & Security and allow DeepSeek Harness under Full Disk Access and Automation → Messages, then restart the app.",
       },
     };
 
@@ -333,11 +343,25 @@ window.__ModuleLoader__.load({
           background: var(--dsw-alias-bg-skeleton, rgba(127, 127, 127, 0.1));
           color: var(--dsw-alias-label-tertiary);
         }
+        .cc-status-pill[data-status="auth"] {
+          background: rgba(245, 158, 11, 0.14);
+          color: var(--dsw-alias-state-warning-primary, #b45309);
+        }
         .cc-pulse-dot {
           width: 6px;
           height: 6px;
           border-radius: 50%;
           background: currentColor;
+        }
+        .cc-auth-warning {
+          margin: -1px 18px 14px;
+          padding: 10px 12px;
+          border: 1px solid rgba(245, 158, 11, 0.35);
+          border-radius: 8px;
+          background: rgba(245, 158, 11, 0.09);
+          color: var(--dsw-alias-label-secondary);
+          font: var(--dsw-font-xxs-12);
+          line-height: 18px;
         }
         .cc-status-pill[data-status="online"] .cc-pulse-dot {
           box-shadow: 0 0 0 2px var(--dsw-alias-state-success-tertiary);
@@ -758,6 +782,7 @@ window.__ModuleLoader__.load({
       const label = spec.label || ch.label;
       const color = spec.color || ch.color || "#3370ff";
       const merged = { ...ch.namespace, ...ch.fileConfig };
+      const needsAuthorization = ch.id === "imessage" && (merged.mode || "local") === "local";
 
       let summaryText = "";
       if (ch.id === "feishu") {
@@ -772,10 +797,11 @@ window.__ModuleLoader__.load({
         summaryText = spec.desc || ch.desc;
       }
 
-      return React.createElement("div", {
-        className: "cc-list-row",
-        "data-configured": String(configured),
-      },
+      return React.createElement(React.Fragment, null,
+        React.createElement("div", {
+          className: "cc-list-row",
+          "data-configured": String(configured),
+        },
         // 左侧：官方 Brand Logo + 通道名称 + 紧凑元数据
         React.createElement("div", { className: "cc-row-left" },
           React.createElement("div", { className: "cc-row-icon-wrap" },
@@ -795,10 +821,10 @@ window.__ModuleLoader__.load({
           React.createElement("div", { className: "cc-row-status-box" },
             React.createElement("span", {
               className: "cc-status-pill",
-              "data-status": configured ? "online" : "offline",
+              "data-status": needsAuthorization ? "auth" : configured ? "online" : "offline",
             },
               React.createElement("span", { className: "cc-pulse-dot" }),
-              configured ? t.statusOnline : t.statusInactive,
+              needsAuthorization ? t.statusAuthorization : configured ? t.statusOnline : t.statusInactive,
             ),
             configured && (ch.sessions || 0) > 0 && React.createElement("span", { className: "cc-row-sessions" },
               `💬 ${ch.sessions} ${t.sessionsCount}`,
@@ -809,6 +835,12 @@ window.__ModuleLoader__.load({
             onClick: () => onConfigure(ch),
             style: { minWidth: 84 },
           }, `⚙️ ${t.btnConfigure}`),
+        ),
+        ),
+        needsAuthorization && React.createElement("div", { className: "cc-auth-warning" },
+          React.createElement("strong", null, `⚠️ ${t.imessageAuthTitle}`),
+          React.createElement("div", null, ch.databaseReadable ? t.imessageAuthDatabaseReady : t.imessageAuthDatabaseDenied),
+          React.createElement("div", null, t.imessageAuthGuide),
         ),
       );
     }
@@ -881,6 +913,11 @@ window.__ModuleLoader__.load({
 
           React.createElement("div", { className: "cc-modal-body" },
             guide && React.createElement("div", { className: "cc-modal-guide" }, `💡 ${guide}`),
+
+            ch.id === "imessage" && (formData.mode || "local") === "local" && React.createElement("div", { className: "cc-auth-warning", style: { margin: 0 } },
+              React.createElement("strong", null, `⚠️ ${t.imessageAuthTitle}`),
+              React.createElement("div", null, t.imessageAuthGuide),
+            ),
 
             statusMsg && React.createElement("div", {
               className: `cc-msg-banner ${statusMsg.type === "success" ? "cc-msg-success" : "cc-msg-err"}`,
@@ -1098,4 +1135,3 @@ window.__ModuleLoader__.load({
     return module.exports;
   },
 });
-

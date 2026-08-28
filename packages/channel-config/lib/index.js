@@ -10,6 +10,7 @@ import z from "@deepseek-ai/schemastery";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
+import { DatabaseSync } from "node:sqlite";
 
 export const name = "harness-channel-config";
 
@@ -207,7 +208,9 @@ function isChannelConfigured(id, cfg, sessions) {
     case "feishu":
       return Boolean(cfg.appId && String(cfg.appId).trim() && cfg.appSecret && String(cfg.appSecret).trim());
     case "imessage":
-      return Boolean((cfg.chatDb && String(cfg.chatDb).trim()) || (cfg.photonApiOrigin && String(cfg.photonApiOrigin).trim()) || (cfg.relayApiBase && String(cfg.relayApiBase).trim()) || cfg.mode === "local");
+      // 本地模式没有凭证；默认 chat.db 路径和 mode=local 不能代表已经授权。
+      if (cfg.mode === "local") return false;
+      return Boolean((cfg.mode === "photon" && cfg.photonApiOrigin && String(cfg.photonApiOrigin).trim()) || (cfg.mode === "relay" && cfg.relayApiBase && String(cfg.relayApiBase).trim()));
     case "telegram":
       return Boolean(cfg.token && String(cfg.token).trim());
     case "discord":
@@ -226,6 +229,32 @@ function isChannelConfigured(id, cfg, sessions) {
       return Boolean((cfg.appId && String(cfg.appId).trim()) || (cfg.token && String(cfg.token).trim()));
     default:
       return false;
+  }
+}
+
+function expandHomePath(value) {
+  const path = typeof value === "string" && value.trim() ? value.trim() : join(homedir(), "Library/Messages/chat.db");
+  return path.replace(/^~(?=\/|$)/, homedir());
+}
+
+function inspectImessageStatus(cfg) {
+  if ((cfg?.mode || "local") !== "local") return {};
+  const chatDb = expandHomePath(cfg?.chatDb);
+  try {
+    const db = new DatabaseSync(chatDb);
+    db.prepare("SELECT MAX(ROWID) AS maxRow FROM message").get();
+    db.close();
+    return {
+      statusCode: "authorization-required",
+      databaseReadable: true,
+      statusMessage: "chat.db 可读取，但仍需允许自动化控制“信息”应用。",
+    };
+  } catch {
+    return {
+      statusCode: "authorization-required",
+      databaseReadable: false,
+      statusMessage: "无法读取 chat.db，需要开启完全磁盘访问；同时需要允许自动化控制“信息”应用。",
+    };
   }
 }
 
@@ -395,6 +424,7 @@ class ChannelConfigService extends TypertRemoteService {
       const sessions = Object.keys(state).length;
       const merged = { ...namespace, ...fileCfg };
       const configured = isChannelConfigured(ch.id, merged, sessions);
+      const status = ch.id === "imessage" ? inspectImessageStatus(merged) : {};
 
       items.push({
         id: ch.id,
@@ -405,6 +435,7 @@ class ChannelConfigService extends TypertRemoteService {
         guide: ch.guide ?? "",
         fields: ch.fields ?? [],
         configured,
+        ...status,
         sessions,
         state,
         namespace,

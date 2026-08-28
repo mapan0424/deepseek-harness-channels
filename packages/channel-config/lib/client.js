@@ -37,6 +37,7 @@ window.__ModuleLoader__.load({
         statusOnline: "已连接运行",
         statusInactive: "未接入",
         statusAuthorization: "需要授权",
+        statusAuthorized: "已授权接收",
         sessionsCount: "个活跃会话",
         btnConfigure: "配置参数",
         btnQuickAdd: "+ 快速接入",
@@ -79,7 +80,7 @@ window.__ModuleLoader__.load({
         summaryModeRelay: "Claw Relay 代理",
         imessageAuthTitle: "iMessage 需要 macOS 授权",
         imessageAuthDatabaseDenied: "未获得 chat.db 读取权限",
-        imessageAuthDatabaseReady: "chat.db 已可读取，仍需允许自动化控制“信息”应用",
+        imessageAuthDatabaseReady: "chat.db 读取权限已授予；自动化权限会在首次发送回复时验证",
         imessageAuthGuide: "请打开“系统设置 → 隐私与安全性”，为 DeepSeek Harness 开启“完全磁盘访问”和“自动化 → 信息”，然后重启应用。",
       },
       en: {
@@ -96,6 +97,7 @@ window.__ModuleLoader__.load({
         statusOnline: "Connected & Online",
         statusInactive: "Not Connected",
         statusAuthorization: "Authorization Required",
+        statusAuthorized: "Receiving Authorized",
         sessionsCount: " active sessions",
         btnConfigure: "Configure",
         btnQuickAdd: "+ Connect",
@@ -138,7 +140,7 @@ window.__ModuleLoader__.load({
         summaryModeRelay: "Claw Relay Proxy",
         imessageAuthTitle: "iMessage requires macOS authorization",
         imessageAuthDatabaseDenied: "chat.db read access is not granted",
-        imessageAuthDatabaseReady: "chat.db is readable; automation access to Messages is still required",
+        imessageAuthDatabaseReady: "chat.db read access is granted; automation access will be checked when sending a reply",
         imessageAuthGuide: "Open System Settings → Privacy & Security and allow DeepSeek Harness under Full Disk Access and Automation → Messages, then restart the app.",
       },
     };
@@ -346,6 +348,10 @@ window.__ModuleLoader__.load({
         .cc-status-pill[data-status="auth"] {
           background: rgba(245, 158, 11, 0.14);
           color: var(--dsw-alias-state-warning-primary, #b45309);
+        }
+        .cc-status-pill[data-status="authorized"] {
+          background: var(--dsw-alias-state-success-tertiary);
+          color: var(--dsw-alias-state-success-primary);
         }
         .cc-pulse-dot {
           width: 6px;
@@ -782,7 +788,8 @@ window.__ModuleLoader__.load({
       const label = spec.label || ch.label;
       const color = spec.color || ch.color || "#3370ff";
       const merged = { ...ch.namespace, ...ch.fileConfig };
-      const needsAuthorization = ch.id === "imessage" && (merged.mode || "local") === "local";
+      const needsAuthorization = ch.id === "imessage" && ch.statusCode === "authorization-required";
+      const databaseAuthorized = ch.id === "imessage" && ch.statusCode === "ready";
 
       let summaryText = "";
       if (ch.id === "feishu") {
@@ -821,10 +828,10 @@ window.__ModuleLoader__.load({
           React.createElement("div", { className: "cc-row-status-box" },
             React.createElement("span", {
               className: "cc-status-pill",
-              "data-status": needsAuthorization ? "auth" : configured ? "online" : "offline",
+              "data-status": needsAuthorization ? "auth" : databaseAuthorized ? "authorized" : configured ? "online" : "offline",
             },
               React.createElement("span", { className: "cc-pulse-dot" }),
-              needsAuthorization ? t.statusAuthorization : configured ? t.statusOnline : t.statusInactive,
+              needsAuthorization ? t.statusAuthorization : databaseAuthorized ? t.statusAuthorized : configured ? t.statusOnline : t.statusInactive,
             ),
             configured && (ch.sessions || 0) > 0 && React.createElement("span", { className: "cc-row-sessions" },
               `💬 ${ch.sessions} ${t.sessionsCount}`,
@@ -914,7 +921,7 @@ window.__ModuleLoader__.load({
           React.createElement("div", { className: "cc-modal-body" },
             guide && React.createElement("div", { className: "cc-modal-guide" }, `💡 ${guide}`),
 
-            ch.id === "imessage" && (formData.mode || "local") === "local" && React.createElement("div", { className: "cc-auth-warning", style: { margin: 0 } },
+            ch.id === "imessage" && (formData.mode || "local") === "local" && ch.statusCode === "authorization-required" && React.createElement("div", { className: "cc-auth-warning", style: { margin: 0 } },
               React.createElement("strong", null, `⚠️ ${t.imessageAuthTitle}`),
               React.createElement("div", null, t.imessageAuthGuide),
             ),

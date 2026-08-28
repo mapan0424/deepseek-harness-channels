@@ -245,9 +245,9 @@ function inspectImessageStatus(cfg) {
     db.prepare("SELECT MAX(ROWID) AS maxRow FROM message").get();
     db.close();
     return {
-      statusCode: "authorization-required",
+      statusCode: "ready",
       databaseReadable: true,
-      statusMessage: "chat.db 可读取，但仍需允许自动化控制“信息”应用。",
+      statusMessage: "chat.db 读取权限已授予；自动化权限会在首次发送回复时验证。",
     };
   } catch {
     return {

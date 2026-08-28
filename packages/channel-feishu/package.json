@@ -36,6 +36,7 @@
     "lib/adapters/feishu.mjs",
     "lib/adapters/feishu-ws-frame.mjs",
     "README.md",
+    "README.zh-CN.md",
     "LICENSE"
   ],
   "license": "MIT",

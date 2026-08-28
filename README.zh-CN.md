@@ -1,5 +1,7 @@
 # DeepSeek Harness Channels
 
+English documentation: [README.md](README.md)
+
 这是面向 [DeepSeek Harness](https://github.com/mapan0424/deepseek-harness) 的社区插件集合。
 
 当前仓库包含三个包：

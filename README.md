@@ -1,5 +1,7 @@
 # DeepSeek Harness Channels
 
+中文文档：[README.zh-CN.md](README.zh-CN.md)
+
 Community channel packages for [DeepSeek Harness](https://github.com/mapan0424/deepseek-harness).
 
 This repository currently contains three packages:

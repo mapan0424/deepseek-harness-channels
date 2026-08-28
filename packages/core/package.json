@@ -15,7 +15,8 @@
   "files": [
     "index.js",
     "lib/gateway-core.mjs",
-    "lib/helpers/logger.mjs"
+    "lib/helpers/logger.mjs",
+    "README.zh-CN.md"
   ],
   "license": "MIT",
   "peerDependencies": {

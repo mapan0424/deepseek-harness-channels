@@ -55,9 +55,7 @@ const CHANNELS = [
     tags: ["本地原生", "chat.db直连", "零第三方中转"],
     guide: "利用 macOS 本地信息数据库与 AppleScript 直接与系统「信息」应用协同，无需第三方云端中转。",
     fields: [
-      { key: "mode", label: "运行模式", type: "select", options: [{ value: "local", label: "本地原生 (chat.db)" }, { value: "photon", label: "Photon 远程中继" }, { value: "relay", label: "Claw Relay 代理" }], default: "local" },
       { key: "chatDb", label: "chat.db 路径", type: "text", required: false, placeholder: "~/Library/Messages/chat.db" },
-      { key: "imsgCmd", label: "imsg 命令", type: "text", required: false, placeholder: "imsg" },
       { key: "defaultWorkspace", label: "工作空间路径", type: "text", required: false, placeholder: "~/dsh/default" },
       { key: "autoReply", label: "自动回复", type: "boolean", default: true },
       { key: "streamReplies", label: "流式打字输出", type: "boolean", default: true },
@@ -208,9 +206,8 @@ function isChannelConfigured(id, cfg, sessions) {
     case "feishu":
       return Boolean(cfg.appId && String(cfg.appId).trim() && cfg.appSecret && String(cfg.appSecret).trim());
     case "imessage":
-      // 本地模式没有凭证；默认 chat.db 路径和 mode=local 不能代表已经授权。
-      if (cfg.mode === "local") return false;
-      return Boolean((cfg.mode === "photon" && cfg.photonApiOrigin && String(cfg.photonApiOrigin).trim()) || (cfg.mode === "relay" && cfg.relayApiBase && String(cfg.relayApiBase).trim()));
+      // 本地模式没有云端凭证；是否可用由 chat.db 权限状态单独检查。
+      return false;
     case "telegram":
       return Boolean(cfg.token && String(cfg.token).trim());
     case "discord":
@@ -238,7 +235,6 @@ function expandHomePath(value) {
 }
 
 function inspectImessageStatus(cfg) {
-  if ((cfg?.mode || "local") !== "local") return {};
   const chatDb = expandHomePath(cfg?.chatDb);
   try {
     const db = new DatabaseSync(chatDb);

@@ -10,4 +10,3 @@ dsh plugin --profile web add @anarkhgatsby/deepseek-harness-channel-feishu
 安装后，在可视化渠道配置页面中填写飞书 App ID 和 App Secret 即可。
 
 许可证：MIT。
-

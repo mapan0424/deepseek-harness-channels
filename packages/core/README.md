@@ -9,4 +9,3 @@ dsh plugin --profile web add @anarkhgatsby/deepseek-harness-core
 ```
 
 MIT License.
-

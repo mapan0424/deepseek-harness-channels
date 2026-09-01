@@ -10,4 +10,3 @@ dsh plugin --profile web add @anarkhgatsby/deepseek-harness-channel-feishu
 After installation, configure the Feishu App ID and App Secret in the visual channel configuration page.
 
 MIT License.
-

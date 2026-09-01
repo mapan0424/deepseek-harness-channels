@@ -1,7 +1,7 @@
 {
-  "name": "@anarkhgatsby/deepseek-harness-channel-imessage",
+  "name": "@anarkhgatsby/deepseek-harness-channel-wecom",
   "version": "0.1.1",
-  "description": "Channel plugin for DeepSeek Harness: local-only iMessage transport through Messages.app and chat.db. Thin facade on @anarkhgatsby/deepseek-harness-core.",
+  "description": "Channel plugin for DeepSeek Harness: 企业微信 behind one message bus. Thin facade on @anarkhgatsby/deepseek-harness-core.",
   "type": "module",
   "main": "./index.js",
   "exports": {
@@ -16,6 +16,15 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings"
+      ],
+      "platform": "web"
     }
   },
   "files": [
@@ -23,16 +32,16 @@
     "client.js",
     "cordis.patch.yml",
     "lib/config.mjs",
-    "lib/adapters/local.mjs",
+    "lib/adapters/wecom.mjs",
     "README.md",
     "LICENSE"
   ],
   "license": "MIT",
-  "publishConfig": {
-    "access": "public"
-  },
   "dependencies": {
     "@anarkhgatsby/deepseek-harness-core": "^0.1.0"
+  },
+  "optionalDependencies": {
+    "ws": "^8.18.0"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
